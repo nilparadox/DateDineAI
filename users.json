@@ -1,0 +1,54 @@
+{
+    "5d4c81": {
+        "user_id": "5d4c81",
+        "name": "Nilanjan Panda",
+        "vibe": "Quiet Cafe",
+        "food": [
+            "Bengali"
+        ],
+        "budget": 1900,
+        "time_limit": 30,
+        "lat": 19.076,
+        "lon": 72.8777
+    },
+    "6a9f6c": {
+        "user_id": "6a9f6c",
+        "name": "Srabana Maitra",
+        "vibe": "Romantic",
+        "food": [
+            "Indian",
+            "Bengali",
+            "Continental"
+        ],
+        "budget": 2600,
+        "time_limit": 30,
+        "lat": 19.076,
+        "lon": 72.8777
+    },
+    "d3c2c3": {
+        "user_id": "d3c2c3",
+        "name": "Srabana Maitra",
+        "vibe": "Romantic",
+        "food": [
+            "Indian",
+            "Bengali",
+            "Continental"
+        ],
+        "budget": 2300,
+        "time_limit": 30,
+        "lat": 19.076,
+        "lon": 72.8777
+    },
+    "3a28d1": {
+        "user_id": "3a28d1",
+        "name": "Nilanjan Panda",
+        "vibe": "Quiet Cafe",
+        "food": [
+            "Bengali"
+        ],
+        "budget": 1500,
+        "time_limit": 30,
+        "lat": 19.076,
+        "lon": 72.8777
+    }
+}
