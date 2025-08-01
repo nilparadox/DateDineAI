@@ -2,6 +2,11 @@ import streamlit as st
 import uuid
 import json
 import os
+import pandas as pd
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
+
 
 def save_user(user_id, name, vibe, food, budget, time_limit, lat, lon):
     data = {
@@ -170,3 +175,32 @@ if location_str and "," in location_str:
 else:
     st.info("Waiting for location access...")
 
+# -------------------- AI Restaurant Matching Engine --------------------
+
+# Load restaurant data
+df = pd.read_csv("restaurants.csv")
+
+# Load NLP model
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Embed restaurant descriptions
+descriptions = df['Description'].tolist()
+description_embeddings = model.encode(descriptions, show_progress_bar=True)
+
+# Build FAISS index
+dimension = description_embeddings.shape[1]
+index = faiss.IndexFlatL2(dimension)
+index.add(np.array(description_embeddings))
+
+st.success("💡 AI Vibe Matcher loaded. Ready to recommend!")
+st.markdown("---")
+st.write("### 🔍 Test AI Matching (demo)")
+
+user_vibe = st.text_input("Describe your ideal vibe", "romantic rooftop with Italian food")
+
+if st.button("Find Matches"):
+    user_embed = model.encode([user_vibe])
+    D, I = index.search(user_embed, k=3)
+    st.write("Top Matches:")
+    for idx in I[0]:
+        st.write(f"🍽️ {df.iloc[idx]['Name']} — {df.iloc[idx]['Description']}")
