@@ -6,6 +6,18 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+import os
+from google_places import get_places_nearby
+from dotenv import load_dotenv
+
+# Load .env file (local dev)
+load_dotenv()
+
+# Prefer Streamlit Cloud secrets; fall back to .env for local
+GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY"))
+
+if not GOOGLE_API_KEY:
+    st.error("Missing GOOGLE_API_KEY. Add it to .env (local) or Streamlit Secrets (cloud).")
 
 
 def save_user(user_id, name, vibe, food, budget, time_limit, lat, lon):
@@ -113,23 +125,30 @@ if st.button("Link Now"):
                 # Choose budget min of both
                 max_budget = min(you["budget"], partner["budget"])
 
-                # Output mock restaurant options
+                                # Output real restaurant suggestions
                 st.success("🌟 Date Plan Suggestions")
                 st.write(f"**Midpoint Location:** ({mid_lat:.4f}, {mid_lon:.4f})")
                 st.write(f"**Shared Food:** {', '.join(shared_food)}")
                 st.write(f"**Max Budget:** ₹{max_budget}")
 
                 st.markdown("---")
-                st.write("Here are a few restaurant ideas (mock):")
-                for i in range(3):
-                    st.markdown(f"""
-                    🥂 **Romantic Spot #{i+1}**
-                    - Cuisine: {shared_food[0]}
-                    - Vibe: {you['vibe']} / {partner['vibe']}
-                    - Distance: ~{5+i*2} km
-                    - Budget: ₹{max_budget}
-                    - Coordinates: ({mid_lat + 0.001*i:.4f}, {mid_lon - 0.001*i:.4f})
-                    """)
+                st.write("### 🍽️ Searching for Restaurants Near You...")
+
+                # Use your existing function
+                query = f"{you['vibe']} {shared_food[0]} restaurant"
+                places = get_places_nearby(mid_lat, mid_lon, radius=5000, query=query)
+
+                if not places:
+                    st.warning("No restaurants found. Try different preferences.")
+                else:
+                    for i, place in enumerate(places[:5]):
+                        st.markdown(f"""
+                        🥂 **{place['Name']}**
+                        - 📍 {place['Address']}
+                        - ⭐ Rating: {place['Rating']}
+                        - 📖 Tags: {place['Description']}
+                        """)
+
             else:
                 st.error("⚠️ Could not load both profiles.")
         else:
@@ -174,6 +193,27 @@ if location_str and "," in location_str:
         st.warning("Unable to parse coordinates.")
 else:
     st.info("Waiting for location access...")
+# --- Fallback: manual address to coordinates via Google Geocoding ---
+st.markdown("#### Or enter a location manually")
+manual_addr = st.text_input("City or full address", placeholder="e.g., Bandra West, Mumbai")
+
+if st.button("Use this location"):
+    if not manual_addr.strip():
+        st.warning("Please type a city or address.")
+    else:
+        try:
+            import requests
+            params = {"address": manual_addr, "key": GOOGLE_API_KEY}
+            resp = requests.get("https://maps.googleapis.com/maps/api/geocode/json", params=params, timeout=15).json()
+            if resp.get("status") == "OK" and resp.get("results"):
+                loc = resp["results"][0]["geometry"]["location"]
+                st.session_state.user_lat = float(loc["lat"])
+                st.session_state.user_lon = float(loc["lng"])
+                st.success(f"Location set from address: ({st.session_state.user_lat:.6f}, {st.session_state.user_lon:.6f})")
+            else:
+                st.error(f"Could not geocode that address. Status: {resp.get('status')}")
+        except Exception as e:
+            st.error(f"Geocoding failed: {e}")
 
 # -------------------- AI Restaurant Matching Engine --------------------
 
