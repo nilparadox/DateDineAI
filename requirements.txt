@@ -1,5 +1,7 @@
 streamlit
+sentence-transformers
+faiss-cpu
 pandas
 numpy
-faiss-cpu
-sentence-transformers
+python-dotenv
+requests
